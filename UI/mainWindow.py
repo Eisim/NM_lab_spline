@@ -25,6 +25,9 @@ def create_plot(parent):
 class UI_mainWindow(QMainWindow):
     def __init__(self):
 
+        if not os.path.isdir('data'):
+            os.mkdir('data')# дириктория для записи файлов
+
         super(UI_mainWindow, self).__init__()
         uic.loadUi(ui_file, self)
         # определение значений по умолчанию
@@ -142,7 +145,7 @@ class UI_mainWindow(QMainWindow):
         # Функция из 3-х для основной задачи (см. видос Капкаева)
         task_func = self.get_task_main_func() # f1 | f2 | f3
 
-        my_func =lib.f_test
+        my_func =lib.write_to_files
         # if task == 0:
         #
         #     # my_func = lib.run_progonka_test
@@ -167,9 +170,9 @@ class UI_mainWindow(QMainWindow):
         # my_func.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double,
         #                     ctypes.c_double,
         #                     ctypes.c_double, ctypes.c_double, ctypes.c_double]
-        my_func.argtypes = [ctypes.c_int,ctypes.c_double,ctypes.c_double,ctypes.c_double,ctypes.c_double]
+        my_func.argtypes = [ctypes.c_int,ctypes.c_int,ctypes.c_double,ctypes.c_double,ctypes.c_double,ctypes.c_double,ctypes.c_int]
         my_func.restype = ctypes.c_void_p
-        my_func(n, 0, 0, 0, 1)
+        my_func(n, 2*n, 0, 0, 0.1,0.9,0)
 
         # self.clear_table(self.info_table_V_dot)
 
@@ -294,7 +297,7 @@ class UI_mainWindow(QMainWindow):
     #     return self.max_num_iter.text()
 
     def get_num_uzlov(self):
-        return self.num_uzlov.text()
+        return self.input_n.text()
 
     def get_task(self):
         return self.comboBox.currentIndex()

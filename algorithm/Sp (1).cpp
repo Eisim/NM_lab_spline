@@ -1,360 +1,232 @@
-﻿// Sp.cpp : Этот файл содержит функцию "main". Здесь начинается и заканчивается выполнение программы.
-//
-#include <iostream>
-#include<vector>
-#include <math.h> // добавляем математические функции
-#include <fstream>
-#include<iomanip>
-
-std::vector<double> progon(std::vector<std::vector<double>> matr, std::vector<double> b) {
-	std::vector<double> res;
-	std::vector<double> alfa;
-	std::vector<double> betta;
-	std::vector<double> temp;
-	alfa.push_back((-matr.at(0).at(1)) / matr.at(0).at(0));
-	betta.push_back(b.at(0) / matr.at(0).at(0));
-	int i = 1;
-	double x = 0;
-	while (i < b.size() - 1) {
-		x = matr.at(i).at(1) + matr.at(i).at(0) * alfa.at(i - 1);
-		alfa.push_back(-matr.at(i).at(2) / x);
-		betta.push_back((b.at(i) - matr.at(i).at(0) * betta.at(i - 1)) / x);
-		i++;
-	}
-	x = matr.at(i).at(1) + matr.at(i).at(0) * alfa.at(i - 1);
-	betta.push_back((b.at(i) - matr.at(i).at(0) * betta.at(i - 1)) / x);
-
-	temp.push_back(betta.at(i));
-	i--;
-	while (i > -1) {
-		temp.push_back(alfa.at(i) * temp.back() + betta.at(i));
-		i--;
-	}
-	int j = temp.size();
-	res.resize(j);
-
-	std::vector<double>::iterator Iter = res.begin();
-	while (j != 0) {
-		*Iter = (temp.at(j - 1));
-		j--;
-		Iter++;
-	}
-	return res;
-}
-
+﻿#include<vector>
+#include<functional>
+#include<cmath>
 double f1(double x) {
-	return (pow(x, 3) + 3 * pow(x, 2));
+	if (x <= 0 && x >= -1)
+		return (std::pow(x, 3) + 3 * std::pow(x, 2));
+	else if (x >= 0 && x <= 1)
+		return (-std::pow(x, 3) + 3 * std::pow(x, 2));
+	throw std::exception("function is not defined");
 }
 
-double f2(double x) {
-	return (-pow(x, 3) + 3 * pow(x, 2));
-}
 double f12(double x) {
 	return sin(x) / x;
 }
 
 class Spline {
-
-
 private:
+	std::function<double(double)> func;
 
-	double S(double x, int i) { // x -аргумент i - номер S1 S2 S3 и тд // канон вид S= ai + bi(x-xi) + ci/2 (x-xi)^2 + di/6(x-xi)^3
-		return A[i - 1] + B[i - 1] * (x - X_i[i]) + C[i] / 2 * pow((x - X_i[i]), 2) + D[i - 1] / 6 * pow((x - X_i[i]), 3);
+	void calc_C() {
+		C[0] = M1;
+		C[n] = M2;
+		std::vector<double> alpha_arr(n), beta_arr(n);
+		alpha_arr[0] = 0;
+		beta_arr[0] = M1;
 
-	}
-	double derivative_1(double f(double), double x, double h) { // первая производная f' = (f(x+h) - f(x-h))/2h
-		return (f(x + h) - f(x - h)) / (2 * h);
-	}
-	double derivative_1(double x, int i) { // первая производная для сплайна bi*x + ci *(x-xi) + di/2(x-xi)^2
-		return +B[i - 1] + C[i] * (x - X_i[i]) + D[i - 1] / 2 * pow((x - X_i[i]), 2);
-	}
-	double derivative_2(double f(double), double x, double h) { // вторая производная f'' = (f(x+h) -2f(x) + f(x-h))/h^2
-		return (f(x + h) - 2 * f(x) + f(x - h)) / pow(h, 2);
-	}
-	double derivative_2(double x, int i) { // вторая производная для сплайна ci *x + di(x - xi)
-		return C[i] + D[i - 1] * (x - X_i[i]);
-	}
+		double A_i, B_i, C_i, phi_i;
+		for (int i = 1; i < n; i++) {
+			A_i = x_arr[i] - x_arr[i - 1];// элемент под диагональю
+			C_i = -2 * (x_arr[i + 1] - x_arr[i - 1]);// диагональный элемент
+			B_i = x_arr[i + 1] - x_arr[i];// наддиагональный элемент
+			phi_i = -6 * ((f_arr[i + 1] - f_arr[i]) / (x_arr[i + 1] - x_arr[i]) - (f_arr[i] - f_arr[i - 1]) / (x_arr[i] - x_arr[i - 1]));
 
-	void find_C(double f(double), double g(double)) { //  find_P : P ={A,B,C,D} поиск соответственных коэффециэнтов , формулы можно в методичке по сплайнам найти (Для условий S''(a) =M1 , S''(b) =M2 !!!)
-		if (n == 2) {
-			C.push_back(M1);
-			C.push_back((6 / h * ((F_i[2] - F_i[1]) - (F_i[1] - F_i[0])) - (M1 * h) - (M2 * h)) / (4 * h));
-			C.push_back(M2);
-			find_A();
-			find_B();
-			find_D();
-			if (f == g) {
-				examination(f);
-			}
-			else {
-				examination(f, g);
-			}
+			alpha_arr[i] = B_i / (C_i - A_i * alpha_arr[i - 1]);
+			beta_arr[i] = (A_i * beta_arr[i - 1] + phi_i) / (C_i - alpha_arr[i - 1] * A_i);
 		}
-		else {
-			int m = n - 1;
-			std::vector<std::vector <double>> matr; // n-1 x n-1
-			std::vector<double> str; // левая часть , строка n - 1
-			std::vector<double> rhs; // правая часть n - 1
-			rhs.push_back(6 / h * ((F_i[2] - F_i[1]) - (F_i[1] - F_i[0])) - (M1 * h)); // первая строка матрицы
-			str.push_back(4 * h);
-			str.push_back(h);
-			matr.push_back(str);
-			/*
-			если шаг константа то матрица будет иметь след вид:
-			4h h 0 ... 0         |то что там с ф - M1 * h
-			h 4h h ... 0		 |
-			0 h 4h h ... 0		 | то что там с Ф
-			...               =  |
-			...					 |
-			0 ... h 4h           | то что там с Ф - M2 * h
-			для прогонки мне надо передать не нулевые коэффециэнты
-			*/
 
-			for (int i = 2; i <= m - 1; i++) { // подсчет строк со 2 по m-2
-				str.clear();
-				str.push_back(h);
-				str.push_back(4 * h);
-				str.push_back(h);
-				matr.push_back(str);
-				rhs.push_back(6 / h * ((F_i[i + 1] - F_i[i]) - (F_i[i] - F_i[i - 1])));
-			}
-			str.clear();
-			rhs.push_back(6 / h * ((F_i[m + 1] - F_i[m]) - (F_i[m] - F_i[m - 1])) - (M2 * h)); // подсчет последний строки
-			str.push_back(h);
-			str.push_back(4 * h);
-			matr.push_back(str);
-			C = progon(matr, rhs);
-			auto iter = C.cbegin();
-			C.emplace(iter, M1);
-			C.push_back(M2);
-			find_A();
-			find_B();
-			find_D();
-			if (f == g) {
-				examination(f);
-			}
-			else {
-				examination(f, g);
-			}
+		for (int i = n - 1; i >= 0; i--) {
+			C[i] = (alpha_arr[i] * C[i + 1]) + beta_arr[i];
+		}
+	}
+	void calc_A() {
+		for (int i = 1; i < A.size() + 1; i++) {
+			A[i - 1] = f_arr[i];
+		}
+	}
+	void calc_B() {
+		for (int i = 1; i < B.size() + 1; i++) {
+			B[i - 1] = (f_arr[i] - f_arr[i - 1]) / (x_arr[i] - x_arr[i - 1]) + C[i] * (x_arr[i] - x_arr[i - 1]) / (3) + C[i - 1] * (x_arr[i] - x_arr[i - 1]) / (6);
+		}
+	}
+	void calc_D() {
+		for (int i = 1; i < D.size() + 1; i++) {
+			D[i - 1] = (C[i] - C[i - 1]) / (x_arr[i] - x_arr[i - 1]);
 		}
 	}
 
-	void find_A() {
-		for (int i = 1; i <= n; i++) A.push_back(F_i[i]);
-	}
-	void find_D() {
-		for (int i = 1; i <= n; i++) D.push_back((C[i] - C[i - 1]) / h);
-	}
-	void find_B() {
-		for (int i = 1; i <= n; i++) {
-			B.push_back((F_i[i] - F_i[i - 1]) / h + C[i] * h / 3 + C[i - 1] * h / 6);
+	void calc_F() {
+		for (auto e : x_N) {
+			F.push_back(func(e));
 		}
 	}
-	void clear() {
-		C.clear();
-		A.clear();
-		B.clear();
-		D.clear();
-		X_i.clear();
-		X_2_i.clear();
-		F_i.clear();
-		r_1.clear();
-		r_2.clear();
-		r_3.clear();
 
+	//!!! не нравится блок с производными
+	void calc_dF() {
+		double h = 0.001;
+		for (int i = 0; i < x_N.size(); i++) {
+			dF.push_back((func(x_N[i] + h) - func(x_N[i] - h)) / (2 * h));
+		}
 	}
-	void examination(double f(double)) { // удваивает начальное n пока не добьеться нужной точности   ///в производной шаг константный у меня , но если надо можете туда что то другое передавать
-		double x = 0;
-		double X_max;
-		int j = 1;
-		double max_1 = fabs(f(a) - S(a, 1));
-		double max_2 = fabs(derivative_1(f, a, 0.001) - derivative_1(a, 1));
-		double max_3 = fabs(derivative_2(f, a, 0.001) - derivative_2(a, 1));
-		for (int i = 0; i <= 2 * n; i++) {
-			x = a + h / 2 * i;
-			X_2_i.push_back(x);
-			if (x <= X_i[j]) {
-				if (fabs(f(x) - S(x, j)) > max_1) {
-					max_1 = fabs(f(x) - S(x, j));
-					X_max = x;
+	void calc_dS() {
+		int spline_index = 1;
+		for (auto e : x_N) {
+			if (e > x_arr[spline_index]) {
+				spline_index++;
+			}
+			else if (e < x_arr[spline_index - 1]) {//по идее этого условия не должно быть
+				spline_index--;
+			}
+			dS.push_back(B[spline_index - 1] + C[spline_index] * (e - x_N[spline_index]) + D[spline_index - 1] / 2 * std::pow((e - x_N[spline_index]), 2));
+		}
+	}
+	void calc_d2F() { // вторая производная f'' = (f(x+h) -2f(x) + f(x-h))/h^2
+		double h = 0.001;
+		for (auto e : x_N)
+			d2F.push_back((func(e + h) - 2 * func(e) + func(e - h)) / std::pow(h, 2));
+	}
+	void calc_d2S() { // вторая производная для сплайна ci *x + di(x - xi)
+		int spline_index = 1;
+		{
+			int spline_index = 1;
+			for (auto e : x_N) {
+				if (e > x_arr[spline_index]) {
+					spline_index++;
 				}
-				if ((fabs(derivative_1(f, x, 0.001) - derivative_1(x, j))) > max_2) max_2 = fabs(derivative_1(f, x, 0.001) - derivative_1(x, j));
-				if ((fabs(derivative_2(f, x, 0.001) - derivative_2(x, j))) > max_3) max_3 = fabs(derivative_2(f, x, 0.001) - derivative_2(x, j));
-			}
-
-			else {
-				j++;
-				if (fabs(f(x) - S(x, j)) > max_1) {
-					max_1 = fabs(f(x) - S(x, j));
-					X_max = x;
+				else if (e < x_arr[spline_index - 1]) {//по идее этого условия не должно быть
+					spline_index--;
 				}
-				if ((fabs(derivative_1(f, x, 0.001) - derivative_1(x, j))) > max_2) max_2 = fabs(derivative_1(f, x, 0.001) - derivative_1(x, j));
-				if ((fabs(derivative_2(f, x, 0.001) - derivative_2(x, j))) > max_3) max_3 = fabs(derivative_2(f, x, 0.001) - derivative_2(x, j));
+				d2S.push_back(C[spline_index] + D[spline_index - 1] * (e - x_N[spline_index]));
 			}
-			r_1.push_back(fabs(f(x) - S(x, j)));
-			r_2.push_back(fabs(derivative_1(f, x, 0.001) - derivative_1(x, j)));
-			r_3.push_back(fabs(derivative_2(f, x, 0.001) - derivative_2(x, j)));
-
-		}
-
-
-		max_eps = max_1;
-		if ((max_eps - 1e-06) > 0) {
-			this->n = n * 2;
-			clear();
-			this->h = abs(a - b) / n;
-			A_12(f12);
-		}
-		else {
-			std::cout << " n =  " << n << std::endl; // это все теперь в файл фигануть надо, но предлагаю сначало консольно сделать.
-			std::cout << " max1(F(x) - S(x)) =  " << max_1 << std::endl;
-			std::cout << " max2(F'(x) - S'(x)) =  " << max_2 << std::endl;
-			std::cout << " max3(F''(x) - S''(x)) =  " << max_3 << std::endl;
 		}
 	}
 
-	void examination(double f(double), double g(double)) { // проверяет корректность тестовой задачи (A)
-		double x = 0;
-		int j = 1;
-		double max_1 = fabs(f(a) - S(a, 1));
-		double max_2 = fabs(derivative_1(f, a, 0.01) - derivative_1(a, 1));
-		double max_3 = fabs(derivative_2(f, a, 0.01) - derivative_2(a, 1));
-		for (int i = 0; i <= 2 * n; i++) {
-			x = -1 + h / 2 * i;
-			X_2_i.push_back(x);
-			if (x <= X_i[j]) {
-				if (x <= 0) {
-					if (fabs(f(x) - S(x, j)) > max_1) max_1 = fabs(f(x) - S(x, j));
-					if (fabs(derivative_1(f, x, 0.01) - derivative_1(x, j))) max_2 = fabs(derivative_1(f, x, 0.01) - derivative_1(x, j));
-					if (fabs(derivative_2(f, x, 0.01) - derivative_2(x, j))) max_3 = fabs(derivative_2(f, x, 0.01) - derivative_2(x, j));
-					r_1.push_back(fabs(f(x) - S(x, j)));
-					r_2.push_back(fabs(derivative_1(f, x, 0.001) - derivative_1(x, j)));
-					r_3.push_back(fabs(derivative_2(f, x, 0.001) - derivative_2(x, j)));
-				}
-				else {
-					if (fabs(g(x) - S(x, j)) > max_1) max_1 = fabs(g(x) - S(x, j));
-					if (fabs(derivative_1(g, x, 0.01) - derivative_1(x, j))) max_2 = fabs(derivative_1(g, x, 0.01) - derivative_1(x, j));
-					if (fabs(derivative_2(g, x, 0.01) - derivative_2(x, j))) max_3 = fabs(derivative_2(g, x, 0.01) - derivative_2(x, j));
-					r_1.push_back(fabs(g(x) - S(x, j)));
-					r_2.push_back(fabs(derivative_1(g, x, 0.001) - derivative_1(x, j)));
-					r_3.push_back(fabs(derivative_2(g, x, 0.001) - derivative_2(x, j)));
-				}
-			}
-			else {
-				j++;
-				if (x <= 0) {
-					if (fabs(f(x) - S(x, j)) > max_1) max_1 = fabs(f(x) - S(x, j));
-					if (fabs(derivative_1(f, x, 0.01) - derivative_1(x, j))) max_2 = fabs(derivative_1(f, x, 0.01) - derivative_1(x, j));
-					if (fabs(derivative_2(f, x, 0.01) - derivative_2(x, j))) max_3 = fabs(derivative_2(f, x, 0.01) - derivative_2(x, j));
-					r_1.push_back(fabs(f(x) - S(x, j)));
-					r_2.push_back(fabs(derivative_1(f, x, 0.001) - derivative_1(x, j)));
-					r_3.push_back(fabs(derivative_2(f, x, 0.001) - derivative_2(x, j)));
-				}
-				else {
-					if (fabs(g(x) - S(x, j)) > max_1) max_1 = fabs(g(x) - S(x, j));
-					if (fabs(derivative_1(g, x, 0.01) - derivative_1(x, j))) max_2 = fabs(derivative_1(g, x, 0.01) - derivative_1(x, j));
-					if (fabs(derivative_2(g, x, 0.01) - derivative_2(x, j))) max_3 = fabs(derivative_2(g, x, 0.01) - derivative_2(x, j));
-					r_1.push_back(fabs(g(x) - S(x, j)));
-					r_2.push_back(fabs(derivative_1(g, x, 0.001) - derivative_1(x, j)));
-					r_3.push_back(fabs(derivative_2(g, x, 0.001) - derivative_2(x, j)));
-				}
-			}
-		}
-		// это все теперь в файл фигануть надо, но предлагаю сначало консольно сделать.
-		std::cout << " max1(F(x) - S(x)) =  " << max_1 << std::endl;
-		std::cout << " max2(F'(x) - S'(x)) =  " << max_2 << std::endl;
-		std::cout << " max3(F''(x) - S''(x)) =  " << max_3 << std::endl;
 
+	void calc_dif_F_S() {
+		for (int i = 0; i < x_N.size(); i++) {
+			dif_F_S.push_back(fabs(F[i] - S[i]));
+		}
 	}
-	void test_func(double f(double), double g(double)) { // пункт а) тестовая задача.
-		double x = 0;
-		for (int i = 0; i <= n; i++) {
-			x = -1 + h * i;
-			X_i.push_back(x);
-			if (x <= 0) {
-				F_i.push_back(f(x));
-			}
-			else {
-				F_i.push_back(g(x));
-			}
+	void calc_dif_dF_dS() {
+		for (int i = 0; i < x_N.size(); i++) {
+			dif_dF_dS.push_back(fabs(dF[i] - dS[i]));
 		}
-		//for (int i = 0; i <= n; i++) {
-			//std::cout << "X_i : " << X_i[i] << " F_i : " << F_i[i] << std::endl;
-		//}
-		find_C(f, g);
-
-		return;
 	}
-	void A_12(double f(double)) {
-		double x = 0;
-		for (int i = 0; i <= n; i++) {
-			x = a + h * i;
-			X_i.push_back(x);
-			F_i.push_back(f(x));
-
+	void calc_dif_d2F_d2S() {
+		for (int i = 0; i < x_N.size(); i++) {
+			dif_d2F_d2S.push_back(fabs(d2F[i] - d2S[i]));
 		}
-		find_C(f, f);
 	}
 public:
-	// это все теперь в файл фигануть надо, но предлагаю сначало консольно сделать.
-	std::vector<double> X_i; // узлы с шагом h
-	std::vector<double> F_i; // значения функции в узлах 
-	std::vector<double> C; // коэф-ты С
-	std::vector<double> A;// коэф-ты А
-	std::vector<double> B; // коэф-ты В
-	std::vector<double> D; // коэф-ты D
-	std::vector<double> X_2_i; // узлы с шагом h/2
-	std::vector<double> r_1; // F - S
-	std::vector<double> r_2; // F' - S'
-	std::vector<double> r_3; // F'' - S''
-	double M1 = 0;// S''(a)
-	double M2 = 0;// S''(b)
-	double h, a, b; // Шаг, левая граница, правая граница
-	int n; // число разбиений  -> число узлов n+1
-	double max_eps; // точность 
+	//ПРОВЕРКА КОРРЕКТНОСТИ
+	double max_dif_F_S, max_dif_dF_dS;
+	double argmax_dif_F_S, argmax_dif_dF_dS;
 
-	Spline(int n, double M1, double M2, double a, double b) { // проверку на корректность n  не делаю, это в интерфейсе должно быть.
-		this->n = n;
-		this->M1 = M1;
-		this->M2 = M2;
-		this->a = a;
-		this->b = b;
-		this->h = abs(a - b) / n;
+
+	std::vector<double> F, dF, dS, d2F, d2S;
+	std::vector<double> dif_F_S, dif_dF_dS;
+	std::vector<double> dif_d2F_d2S;
+	//ЗНАЧЕНИЯ КОНТРОЛЬНОЙ СЕТКИ
+	std::vector<double> x_N, S;
+
+	//ЗАДАЁТ ПОЛЬЗОВАТЕЛЬ
+	int n;// число разбиений
+	double M1, M2;// граничные условия
+	std::vector<double> x_arr, f_arr; // сетка сплайна
+
+	//ВЫЧИСЛЯЕТ ПРОГРАММА
+	std::vector<double> A, B, C, D; //коэф-ы сплайна
+
+	//КОНСТРУКТОРЫ
+	Spline(std::vector<double> x, std::vector<double> f, double M1, double M2) :x_arr(x), f_arr(f), n(x.size() - 1), M1(M1), M2(M2), A(n), B(n), C(n + 1), D(n)
+	{
+		calc_C();
+		calc_A();
+		calc_D();
+		calc_B();
+
 	}
-	void Run(int value) {
-		switch (value)
-		{
-		case 1:
-			test_func(f1, f2);
-			break;
-		case 2:
-			A_12(f12);
-			break;
-		default:
-			break;
+	Spline(int n, double a, double b, std::function<double(double)> func, double M1, double M2) :n(n), M1(M1), M2(M2), A(n), B(n), C(n + 1), D(n) {
+		double h = (b - a) / (n);
+		for (int i = 0; i <= n; i++) {
+			x_arr.push_back(a + h * i);
+			f_arr.push_back(func(a + h * i));
 		}
+		calc_C();
+		calc_A();
+		calc_D();
+		calc_B();
 	}
+	//МЕТОДЫ КЛАССА
+
+	// задание функции(делается для тестов) 
+	// ЗАМЕЧАНИЕ: Spline не будет сохранять функцию, если она передаётся в какой-либо другой метод класса или конструктор
+	std::pair<std::vector<double>, std::vector<double>> calculate(int n) {//n - число разбиений
+		double h = (x_arr[x_arr.size() - 1] - x_arr[0]) / n;
+		double cur_x, cur_s;
+		int spline_index = 1;
+		for (int i = 0; i < n; i++) {
+			cur_x = x_arr[0] + h * i;
+			x_N.push_back(cur_x);
+			if (cur_x > x_arr[spline_index]) {
+				spline_index++;
+			}
+			else if (cur_x < x_arr[spline_index - 1]) {//по идее этого условия не должно быть
+				spline_index--;
+			}
+			cur_s = A[spline_index - 1] + B[spline_index - 1] * (cur_x - x_arr[spline_index]) + C[spline_index] / 2 * std::pow((cur_x - x_arr[spline_index]), 2) + D[spline_index - 1] / 6 * std::pow((cur_x - x_arr[spline_index]), 3);
+			S.push_back(cur_s);
+		}
+		return std::pair<std::vector<double>, std::vector<double>> {x_N, S};
+	}
+
+	//МЕТОДЫ ДЛЯ ПРОВЕРКИ КОРРЕКТНОСТИ
+	void set_func(std::function<double(double)> func)
+	{
+		this->func = func;
+	}
+
+	void research() {
+		// подсчёт вспомогательных характеристик
+		calc_F();
+		calc_dif_F_S();
+		calc_dF();
+		calc_dS();
+		calc_dif_dF_dS();
+		calc_d2F();
+		calc_d2S();
+		calc_dif_d2F_d2S();
+	}
+
 };
 
-extern "C" __declspec(dllexport) void f_test(int n, double m1, double m2, double a, double b) {
-	Spline sp(n, m1, m2, a, b);
-	sp.Run(1);
-	std::ofstream table_1("data/table_1.txt");
-	std::ofstream table_2("data/table_2.txt");
-	std::ofstream spravka("data/spravka.txt");
-	std::ofstream for_plots("data/for_plots.txt");
+#include<iostream>
+#include<fstream>
+extern "C" __declspec(dllexport) void write_to_files(int n, int N, double m1, double m2, double a, double b, int task_num) {
+	std::vector<std::function<double(double)>> funcs = { f1, f12 };
+
+	Spline sp(n, a, b, funcs[task_num], m1, m2);
+	sp.set_func(funcs[task_num]);
+	sp.calculate(N);
+	sp.research();
+	std::ofstream table_1("table_1.txt");
+	std::ofstream table_2("table_2.txt");
+	std::ofstream spravka("spravka.txt");
+	std::ofstream for_plots("for_plots.txt");
 	for (int i = 1; i < sp.n; i++) {
-		table_1 << (i) << ' ' << (sp.X_i[i - 1]) << ' ' << (sp.X_i[i]) << ' ' << sp.A[i] << ' ' << sp.B[i] << ' ' << sp.C[i] << ' ' << sp.D[i] << '\n';
+		table_1 << (i) << ' ' << (sp.x_arr[i - 1]) << ' ' << (sp.x_arr[i]) << ' ' << sp.A[i] << ' ' << sp.B[i] << ' ' << sp.C[i] << ' ' << sp.D[i] << '\n';
+	}
+	for (int j = 0; j < N; j++) {
+		table_2 << j << ' ' << sp.x_N[j] << ' ' << sp.F[j] << ' ' << sp.S[j] << ' ' << sp.dif_F_S[j] << ' ' << sp.dF[j] << ' ' << sp.dS[j]<<' ' << sp.dif_dF_dS[j] << '\n';
+	}
+	spravka << sp.n << ' ' << N << ' ' << sp.max_dif_F_S << ' ' << sp.argmax_dif_F_S << ' ' << sp.max_dif_dF_dS << ' ' << sp.argmax_dif_dF_dS << '\n';
+	for (int j = 0; j < N; j++) {
+		for_plots << sp.x_N[j]<<' ' << sp.F[j] << ' ' << sp.S[j] << ' ' << sp.dif_F_S[j] << ' ';
+		for_plots << sp.dF[j] << ' ' << sp.dS[j] << ' ' << sp.dif_dF_dS[j] << ' ';
+		for_plots << sp.d2F[j] << ' ' << sp.d2S[j] << ' ' << sp.dif_d2F_d2S[j] << '\n';
 	}
 	table_1.close();
+	table_2.close();
+	spravka.close();
+	for_plots.close();
 }
-
-
-
-
-int main()
-{
-	f_test(10, 0, 0, 0, 1);
-}
-
-
