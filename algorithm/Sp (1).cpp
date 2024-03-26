@@ -1,21 +1,113 @@
 ﻿#include<vector>
 #include<functional>
 #include<cmath>
-double f1(double x) {
-	if (x <= 0 && x >= -1)
+
+//Если я взял не те варианты, поменяйте :-)
+//test func
+double f_test(double x) {
+	if (x >= -1 && x <= 0)
 		return (std::pow(x, 3) + 3 * std::pow(x, 2));
 	else if (x >= 0 && x <= 1)
 		return (-std::pow(x, 3) + 3 * std::pow(x, 2));
 	throw std::exception("function is not defined");
 }
-
-double f12(double x) {
-	return sin(x) / x;
+double df_test(double x) {
+	if (x>=-1 && x<=0) {
+		return 3 * x * x + 6 * x;
+	}
+	else if (x >= 0 && x <= 1) {
+		return -3 * x * x + 6 * x;
+	}
+	throw std::exception("function is not defined");
 }
+double d2f_test(double x) {
+	if (x >= -1 && x <= 0) {
+		return 6 * x + 6;
+	}
+	else if (x >= 0 && x <= 1) {
+		return -6 * x + 6;
+	}
+	throw std::exception("function is not defined");
+}
+
+
+//finc 1
+double f1(double x) {
+	return std::sqrt(x * x - 1) / x;
+}
+double df1(double x) {
+	return 1 / (x * x * std::sqrt(x * x - 1));
+}
+double d2f1(double x) {
+	return ( std::sqrt(x*x-1)*(3*x*x-2) ) / (std::pow(x,7)-2*std::pow(x,5) + std::pow(x,3) );
+}
+
+//func 12
+double f12(double x) {
+	return std::sin(x) / x;
+}
+double df12(double x) {
+	return -(std::sin(x) - x*std::cos(x)) / (x * x);
+}
+double d2f12(double x) {
+	return -((x*x-2)*std::sin(x) + 2*x*std::cos(x)) / (x * x * x);
+}
+
+//func 23
+double f23(double x) {
+	return std::sqrt(4-2*std::sin(x));
+}
+double df23(double x) {
+	return -(std::cos(x)) / ( std::sqrt(4-2*std::sin(x)) );
+}
+double d2f23(double x) {
+	return -(std::sqrt(4 - 2 * std::sin(x)) * (2 * std::pow(std::sin(x), 2) - 4 * std::sin(x) + std::pow(std::cos(x),2))) / (4 * std::pow(std::sin(x), 2) - 16 * std::sin(x) + 16);
+}
+//сделать для осциллирующей функции
+//сделать для осциллирующей функции
+//сделать для осциллирующей функции
+
+//F1
+double F1_oscillating(double x) {
+	return 1;
+}
+double dF1_oscillating(double x) {
+	return 1;
+}
+double d2F1_oscillating(double x) {
+	return 1;
+}
+//F2
+double F2_oscillating(double x) {
+	return 1;
+}
+double dF2_oscillating(double x) {
+	return 1;
+}
+double d2F2_oscillating(double x) {
+	return 1;
+}
+//F3
+double F3_oscillating(double x) {
+	return 1;
+}
+double dF3_oscillating(double x) {
+	return 1;
+}
+double d2F3_oscillating(double x) {
+	return 1;
+}
+
+
+
+
+std::vector<std::function<double(double)>> funcs = { f_test,f1, f12,f23, F1_oscillating,F2_oscillating,F3_oscillating };
+std::vector<std::function<double(double)>> d_funcs = { df_test,df1, df12,df23, dF1_oscillating ,dF2_oscillating ,dF3_oscillating };
+std::vector<std::function<double(double)>> d2_funcs = { d2f_test,d2f1, d2f12,d2f23,d2F1_oscillating, d2F2_oscillating, d2F3_oscillating };
 
 class Spline {
 private:
-	std::function<double(double)> func;
+	std::function<double(double)> func,d_func,d2_func;
 
 	void calc_C() {
 		C[0] = M1;
@@ -64,8 +156,8 @@ private:
 	//!!! не нравится блок с производными
 	void calc_dF() {
 		double h = 0.001;
-		for (int i = 0; i < x_N.size(); i++) {
-			dF.push_back((func(x_N[i] + h) - func(x_N[i] - h)) / (2 * h));
+		for (auto e: x_N) {
+			dF.push_back(d_func(e));
 		}
 	}
 	void calc_dS() {
@@ -83,7 +175,7 @@ private:
 	void calc_d2F() { // вторая производная f'' = (f(x+h) -2f(x) + f(x-h))/h^2
 		double h = 0.001;
 		for (auto e : x_N)
-			d2F.push_back((func(e + h) - 2 * func(e) + func(e - h)) / std::pow(h, 2));
+			d2F.push_back(d2_func(e));
 	}
 	void calc_d2S() { // вторая производная для сплайна ci *x + di(x - xi)
 		int spline_index = 1;
@@ -115,6 +207,25 @@ private:
 	void calc_dif_d2F_d2S() {
 		for (int i = 0; i < x_N.size(); i++) {
 			dif_d2F_d2S.push_back(fabs(d2F[i] - d2S[i]));
+		}
+	}
+	void calc_max_F_S() {
+		max_dif_F_S = -1.;
+		for (int i = 0; i < dif_F_S.size(); i++) {
+			if (max_dif_F_S < dif_F_S[i]) {
+				max_dif_F_S = dif_F_S[i];
+				argmax_dif_F_S = x_N[i];
+
+			}
+		}
+	}
+	void calc_max_dF_dS() {
+		max_dif_dF_dS = -1.;
+		for (int i = 0; i < dif_dF_dS.size(); i++) {
+			if (max_dif_dF_dS < dif_dF_dS[i]) {
+				max_dif_dF_dS = dif_dF_dS[i];
+				argmax_dif_dF_dS = x_N[i];
+			}
 		}
 	}
 public:
@@ -181,13 +292,14 @@ public:
 	}
 
 	//МЕТОДЫ ДЛЯ ПРОВЕРКИ КОРРЕКТНОСТИ
-	void set_func(std::function<double(double)> func)
-	{
-		this->func = func;
-	}
-
-	void research() {
+	
+	void research(int task_num, int N) {
 		// подсчёт вспомогательных характеристик
+		this->func = funcs[task_num];
+		this->d_func = d_funcs[task_num];
+		this->d2_func = d2_funcs[task_num];
+
+		calculate(N);
 		calc_F();
 		calc_dif_F_S();
 		calc_dF();
@@ -196,19 +308,29 @@ public:
 		calc_d2F();
 		calc_d2S();
 		calc_dif_d2F_d2S();
+
+		calc_max_F_S();
+		calc_max_dF_dS();
 	}
 
 };
 
+
+
 #include<iostream>
 #include<fstream>
-extern "C" __declspec(dllexport) void write_to_files(int n, int N, double m1, double m2, double a, double b, int task_num) {
-	std::vector<std::function<double(double)>> funcs = { f1, f12 };
-
-	Spline sp(n, a, b, funcs[task_num], m1, m2);
-	sp.set_func(funcs[task_num]);
-	sp.calculate(N);
-	sp.research();
+extern "C" __declspec(dllexport) void write_to_files(int n, int N, double m1, double m2, double a, double b,int task_type, int task_num) {
+	int task_index = 0;
+	if (task_type == 0)
+		task_index = 0;
+	else if(task_type ==1) {
+		task_index = task_num + 1;
+	}
+	else if (task_type == 2) {
+		task_index = task_num + 4;
+	}
+	Spline sp(n, a, b, funcs[task_index], m1, m2);
+	sp.research(task_index,N);
 	std::ofstream table_1("table_1.txt");
 	std::ofstream table_2("table_2.txt");
 	std::ofstream spravka("spravka.txt");
