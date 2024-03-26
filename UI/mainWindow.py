@@ -167,10 +167,13 @@ class UI_mainWindow(QMainWindow):
         file_name_3 = "for_plots"
 
         file_name_extra_info = 'spravka'
-        # my_func.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double,
-        #                     ctypes.c_double,
-        #                     ctypes.c_double, ctypes.c_double, ctypes.c_double]
-        my_func.argtypes = [ctypes.c_int,ctypes.c_int,ctypes.c_double,ctypes.c_double,ctypes.c_double,ctypes.c_double,ctypes.c_int]
+
+        my_func.argtypes = [ctypes.c_int,ctypes.c_int,#n, N
+                            ctypes.c_double,ctypes.c_double,#M1,M2
+                            ctypes.c_double,ctypes.c_double,#a,b
+                            ctypes.c_int, # task_type
+                            ctypes.c_int,# task_function
+                            ]
         my_func.restype = ctypes.c_void_p
         my_func(n, 2*n, 0, 0, 0.1,0.9,0)
 

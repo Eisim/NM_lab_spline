@@ -65,7 +65,7 @@ private:
 	void calc_dF() {
 		double h = 0.001;
 		for (int i = 0; i < x_N.size(); i++) {
-			dF.push_back((func(x_N[i] + h) - func(x_N[i] - h)) / (2 * h));
+			dF.push_back( ( func(x_N[i] + h) - func(x_N[i] - h)) / (2 * h));
 		}
 	}
 	void calc_dS() {
@@ -82,7 +82,7 @@ private:
 	}
 	void calc_d2F() { // вторая производная f'' = (f(x+h) -2f(x) + f(x-h))/h^2
 		double h = 0.001;
-		for (auto e : x_N)
+		for(auto e: x_N)
 			d2F.push_back((func(e + h) - 2 * func(e) + func(e - h)) / std::pow(h, 2));
 	}
 	void calc_d2S() { // вторая производная для сплайна ci *x + di(x - xi)
@@ -104,7 +104,7 @@ private:
 
 	void calc_dif_F_S() {
 		for (int i = 0; i < x_N.size(); i++) {
-			dif_F_S.push_back(fabs(F[i] - S[i]));
+			dif_F_S.push_back(fabs(F[i]-S[i]));
 		}
 	}
 	void calc_dif_dF_dS() {
