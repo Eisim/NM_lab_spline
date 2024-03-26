@@ -2,8 +2,7 @@
 #include<functional>
 #include<cmath>
 
-//Если я взял не те варианты, поменяйте :-)
-//test func
+
 double f_test(double x) {
 	if (x >= -1 && x <= 0)
 		return (std::pow(x, 3) + 3 * std::pow(x, 2));
@@ -30,6 +29,21 @@ double d2f_test(double x) {
 	throw std::exception("function is not defined");
 }
 
+/*
+//функция из exe файла
+double one_more_test_func(double x) {
+	return 1 / (1 + x * x * x);
+}
+double one_more_test_dfunc(double x) {
+	return -(3*x*x) / (std::pow(x,6)+2*std::pow(x,3) + 1);
+}
+double one_more_test_d2func(double x) {
+	return (12*std::pow(x,4)-6*x)/(std::pow(x,9)+3*std::pow(x,6)+3*std::pow(x,3)+1);
+}
+*/
+
+//Если я взял не те варианты, поменяйте :-)
+//test func
 
 //finc 1
 double f1(double x) {
@@ -100,10 +114,17 @@ double d2F3_oscillating(double x) {
 
 
 
-
+/*
+std::vector<std::function<double(double)>> funcs = { one_more_test_func,f1, f12,f23, F1_oscillating,F2_oscillating,F3_oscillating };
+std::vector<std::function<double(double)>> d_funcs = { one_more_test_dfunc,df1, df12,df23, dF1_oscillating ,dF2_oscillating ,dF3_oscillating };
+std::vector<std::function<double(double)>> d2_funcs = { one_more_test_d2func,d2f1, d2f12,d2f23,d2F1_oscillating, d2F2_oscillating, d2F3_oscillating };
+*/
 std::vector<std::function<double(double)>> funcs = { f_test,f1, f12,f23, F1_oscillating,F2_oscillating,F3_oscillating };
 std::vector<std::function<double(double)>> d_funcs = { df_test,df1, df12,df23, dF1_oscillating ,dF2_oscillating ,dF3_oscillating };
 std::vector<std::function<double(double)>> d2_funcs = { d2f_test,d2f1, d2f12,d2f23,d2F1_oscillating, d2F2_oscillating, d2F3_oscillating };
+
+
+
 
 class Spline {
 private:
@@ -162,6 +183,7 @@ private:
 	}
 	void calc_dS() {
 		int spline_index = 1;
+		double cur_ds;
 		for (auto e : x_N) {
 			if (e > x_arr[spline_index]) {
 				spline_index++;
@@ -169,7 +191,8 @@ private:
 			else if (e < x_arr[spline_index - 1]) {//по идее этого условия не должно быть
 				spline_index--;
 			}
-			dS.push_back(B[spline_index - 1] + C[spline_index] * (e - x_N[spline_index]) + D[spline_index - 1] / 2 * std::pow((e - x_N[spline_index]), 2));
+			cur_ds = B[spline_index - 1] + C[spline_index] * (e - x_arr[spline_index]) + D[spline_index - 1] / 2 * std::pow((e - x_arr[spline_index]), 2);
+			dS.push_back(cur_ds);
 		}
 	}
 	void calc_d2F() { // вторая производная f'' = (f(x+h) -2f(x) + f(x-h))/h^2
@@ -177,10 +200,11 @@ private:
 		for (auto e : x_N)
 			d2F.push_back(d2_func(e));
 	}
-	void calc_d2S() { // вторая производная для сплайна ci *x + di(x - xi)
+	void calc_d2S() { // вторая производная для сплайна ci + di(x - xi)
 		int spline_index = 1;
 		{
 			int spline_index = 1;
+			double cur_d2s;
 			for (auto e : x_N) {
 				if (e > x_arr[spline_index]) {
 					spline_index++;
@@ -188,7 +212,8 @@ private:
 				else if (e < x_arr[spline_index - 1]) {//по идее этого условия не должно быть
 					spline_index--;
 				}
-				d2S.push_back(C[spline_index] + D[spline_index - 1] * (e - x_N[spline_index]));
+				cur_d2s =C[spline_index]  + D[spline_index - 1]* (e - x_arr[spline_index]);
+				d2S.push_back(cur_d2s);
 			}
 		}
 	}
@@ -335,8 +360,8 @@ extern "C" __declspec(dllexport) void write_to_files(int n, int N, double m1, do
 	std::ofstream table_2("table_2.txt");
 	std::ofstream spravka("spravka.txt");
 	std::ofstream for_plots("for_plots.txt");
-	for (int i = 1; i < sp.n; i++) {
-		table_1 << (i) << ' ' << (sp.x_arr[i - 1]) << ' ' << (sp.x_arr[i]) << ' ' << sp.A[i] << ' ' << sp.B[i] << ' ' << sp.C[i] << ' ' << sp.D[i] << '\n';
+	for (int i = 1; i <= sp.n; i++) {
+		table_1 << (i) << ' ' << (sp.x_arr[i - 1]) << ' ' << (sp.x_arr[i]) << ' ' << sp.A[i-1] << ' ' << sp.B[i-1] << ' ' << sp.C[i] << ' ' << sp.D[i-1] << '\n';
 	}
 	for (int j = 0; j < N; j++) {
 		table_2 << j << ' ' << sp.x_N[j] << ' ' << sp.F[j] << ' ' << sp.S[j] << ' ' << sp.dif_F_S[j] << ' ' << sp.dF[j] << ' ' << sp.dS[j]<<' ' << sp.dif_dF_dS[j] << '\n';
