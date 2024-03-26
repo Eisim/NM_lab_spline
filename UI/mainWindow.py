@@ -90,6 +90,8 @@ class UI_mainWindow(QMainWindow):
         self.clear_plot(self.plot_widget_1)
         self.clear_plot(self.plot_widget_2)
         self.clear_plot(self.plot_widget_3)
+        self.clear_table(self.info_table)
+        self.clear_table(self.info_table_2)
     def clear_plot(self, cur_plot_widget):
         cur_plot_widget.plot.cla()
         cur_plot_widget.canvas.draw()  # обновление окна
