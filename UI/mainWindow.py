@@ -10,7 +10,7 @@ import ctypes
 import os
 import time
 
-from table_columns import columns, extra_info_rows
+from table_columns import columns, extra_info_rows, task_standart_params
 
 ui_file = './UI/MainWindow.ui'
 
@@ -24,16 +24,13 @@ def create_plot(parent):
 
 class UI_mainWindow(QMainWindow):
     def __init__(self):
-
         super(UI_mainWindow, self).__init__()
         uic.loadUi(ui_file, self)
-        # определение значений по умолчанию
 
         # создание окон для графиков
-        self.plt = create_plot(self.plot_widget_1) # Функция и сплайн на одном графике
-        self.plt_PS = create_plot(self.plot_widget_2) # График первых производных функции и сплайна
-        self.plt_QS = create_plot(self.plot_widget_3) # Погрешности на одном графике
-
+        self.plt = create_plot(self.plot_widget_1)  # Функция и сплайн на одном графике
+        self.plt_PS = create_plot(self.plot_widget_2)  # График первых производных функции и сплайна
+        self.plt_QS = create_plot(self.plot_widget_3)  # Погрешности на одном графике
         # присвоение мест для окон
         self.plot_widget_1.canvas.setParent(self.plot_widget_1)
         self.plot_widget_2.canvas.setParent(self.plot_widget_2)
@@ -45,11 +42,16 @@ class UI_mainWindow(QMainWindow):
 
         self.addToolBar(self.plot_toolBar)  # создание тулбара
 
+        #функционал кнопок
         self.plot_button.clicked.connect(
             self.plotting)  # задание функционала. В данной строке: построение графика при нажатии на кнопку "Построить"
         self.delete_plot.clicked.connect(
             self.clear_plots)  # задание функционала. В данной строке: очистка окон от ВСЕХ графиков (чистит все окна(графики и таблицу))
-
+        #функционал списков
+        self.task_type.currentTextChanged.connect(self.standart_params)
+        self.task_num.currentTextChanged.connect(self.standart_params)
+        self.standart_params()
+        self.task_index = 0
         # Названия осей
         self.plot_widget_1.plot.set_xlabel("x")
         self.plot_widget_1.plot.set_ylabel("Значение")
@@ -63,32 +65,41 @@ class UI_mainWindow(QMainWindow):
         # настройка включения второго окна
         self.info_button.triggered.connect(lambda: self.info_window("my_info.pdf"))
 
-    def info_window(self,file_name):
+    def standart_params(self):
+        task_type = self.task_type.currentIndex()
+        task_num = self.task_num.currentIndex()
+        self.task_index =0 # Индекс задачи в массиве
+        if task_type == 0:
+            self.task_index = 0
+        elif task_type == 1:
+            self.task_index = task_num + 1
+        elif task_type == 2:
+            self.task_index = task_num + 4
+        a, b, M1, M2 = task_standart_params[self.task_index]
+        self.input_a.setText(str(a))
+        self.input_b.setText(str(b))
+        self.input_mu_0.setText(str(M1))
+        self.input_mu_1.setText(str(M2))
+
+    def info_window(self, file_name):
         self.i_window = QMainWindow()
         self.i_window.ui = UI_infoWindow(file_name)
         self.i_window.ui.show()
 
     def clear_plots(self):
-        self.plt.cla()
-        self.plt_PS.cla()
-        self.plot_widget_1.canvas.draw()  # обновление окна
-        self.plot_widget_2.canvas.draw()
-        self.plot_widget_3.canvas.draw()
-
-        self.clear_exrta_info_table()
+        self.clear_plot(self.plot_widget_1)
+        self.clear_plot(self.plot_widget_2)
+        self.clear_plot(self.plot_widget_3)
         self.clear_table(self.info_table)
         self.clear_table(self.info_table_2)
-        # self.clear_table(self.info_table_V_dot)
+    def clear_plot(self, cur_plot_widget):
+        cur_plot_widget.plot.cla()
+        cur_plot_widget.canvas.draw()  # обновление окна
 
         # Названия осей
-        self.plot_widget_1.plot.set_xlabel("x")
-        self.plot_widget_1.plot.set_ylabel("Значение")
-
-        self.plot_widget_2.plot.set_xlabel("x")
-        self.plot_widget_2.plot.set_ylabel("Значение")
-
-        self.plot_widget_3.plot.set_xlabel("x")
-        self.plot_widget_3.plot.set_ylabel("Значение")
+        cur_plot_widget.plot.set_xlabel("x")
+        cur_plot_widget.plot.set_ylabel("Значение")
+        cur_plot_widget.canvas.draw()
 
     def toolBar_changing(self, index):  # изменение привязки тулбара
         self.removeToolBar(self.plot_toolBar)
@@ -96,7 +107,7 @@ class UI_mainWindow(QMainWindow):
             self.plot_toolBar = NavigationToolbar(self.plot_widget_1.canvas, self)
         elif index == 1:  # тулбар для вкладки # График первых производных функции и сплайна
             self.plot_toolBar = NavigationToolbar(self.plot_widget_2.canvas, self)
-        elif index == 2: # тулбар для вкладки # Погрешности на одном графике
+        elif index == 2:  # тулбар для вкладки # Погрешности на одном графике
             self.plot_toolBar = NavigationToolbar(self.plot_widget_3.canvas, self)
         self.addToolBar(self.plot_toolBar)
 
@@ -129,34 +140,9 @@ class UI_mainWindow(QMainWindow):
 
     def plotting(self):
         # lib_dir = os.path.join(os.curdir, "libNM1_lib.dll")
-        lib_dir = os.path.join(os.curdir, 'dll', 'Release', "labSplines_lib.dll") # Что запускаем
+        lib_dir = os.path.join(os.curdir, 'dll', 'Release', "labSplines_lib.dll")  # Что запускаем
         lib = ctypes.windll.LoadLibrary(lib_dir)
 
-
-
-        # Начальные значения системы (w,s)
-        n = int(self.get_num_uzlov()) # Количество УЧАСТКОВ
-
-        # Задача
-        task = self.get_task() # Тестовая | Основная | Осцилляция
-        # Функция из 3-х для основной задачи (см. видос Капкаева)
-        task_func = self.get_task_main_func() # f1 | f2 | f3
-
-        my_func =lib.f_test
-        # if task == 0:
-        #
-        #     # my_func = lib.run_progonka_test
-        #     file_name_1 = "test_method_1"
-        #     # file_name_for_V_dot = "rigid_syst_data_s"
-        #
-        # else:
-        #     # my_func = lib.run_main_method_2_const_step
-        #     # file_name = "main_method_2_1_const_step_v"
-        #     # file_name_for_V_dot = "main_method_2_1_const_step_v_dot"
-        #     # file_name_extra_info = 'main_method_2_2_const_step'
-        #
-        #     # my_func = lib.run_progonka_main
-        #     file_name = "main_method_1"
 
         file_name_1 = "table_1"
         file_name_2 = "table_2"
@@ -164,15 +150,30 @@ class UI_mainWindow(QMainWindow):
         file_name_3 = "for_plots"
 
         file_name_extra_info = 'spravka'
-        # my_func.argtypes = [ctypes.c_double, ctypes.c_double, ctypes.c_int, ctypes.c_double,
-        #                     ctypes.c_double,
-        #                     ctypes.c_double, ctypes.c_double, ctypes.c_double]
-        my_func.argtypes = [ctypes.c_int,ctypes.c_double,ctypes.c_double,ctypes.c_double,ctypes.c_double]
+
+        my_func = lib.write_to_files
+        my_func.argtypes = [ctypes.c_int, ctypes.c_int,  # n, N
+                            ctypes.c_double, ctypes.c_double,  # M1,M2
+                            ctypes.c_double, ctypes.c_double,  # a,b
+                            ctypes.c_int,  # task_type
+                            ctypes.c_int,  # task_function
+                            ]
         my_func.restype = ctypes.c_void_p
-        my_func(n, 0, 0, 0, 1)
+
+        n = int(self.input_n.text())
+        N = int(self.input_N.text())
+        a = float(self.input_a.text())
+        b = float(self.input_b.text())
+        M1 = float(self.input_mu_0.text())
+        M2 = float(self.input_mu_1.text())
+        task_type = int(self.task_type.currentIndex())
+        task_num = int(self.task_num.currentIndex())
+
+
+
+        my_func(n, N, M1, M2, a, b, task_type, task_num)
 
         # self.clear_table(self.info_table_V_dot)
-
 
         # self.set_table(self.info_table_V_dot, self.file_to_table(file_name_for_V_dot), file_name_for_V_dot)
 
@@ -188,7 +189,8 @@ class UI_mainWindow(QMainWindow):
         self.set_table(self.info_table_2, table_2, file_name_2)  # заполнение таблицы(вкладка "Таблица")
 
         table_extra_info = self.file_to_table(file_name_extra_info)
-        self.update_extra_info_table(file_name_extra_info,table_extra_info)  # заполнение вспомогательной информации(правый нижний угол)
+        self.update_extra_info_table(file_name_extra_info,
+                                     table_extra_info)  # заполнение вспомогательной информации(правый нижний угол)
 
         table_3 = self.file_to_table(file_name_3)  # Парсинг файла в табличный вид (тип ячейки:str) # Здесь графики
 
@@ -205,7 +207,7 @@ class UI_mainWindow(QMainWindow):
         S_ddot_arr = [float(row[8]) for row in table_3]
         Diff_ddot_arr = [float(row[9]) for row in table_3]
 
-        self.plt.plot(X_arr,F_arr,label = "Функция")
+        self.plt.plot(X_arr, F_arr, label="Функция")
         self.plt.plot(X_arr, S_arr, label="Сплайн")
         self.plt.set_xlim(auto=True)
         self.plt.set_ylim(auto=True)
@@ -236,39 +238,11 @@ class UI_mainWindow(QMainWindow):
         # self.plt.plot(X_arr, V_arr, label=labels[1])
         # self.plt.scatter(X_start, s_0,label="Старт. точка (V2)")
 
-
         # self.plt.legend(loc="upper left")  # legend - задание окна легенд
 
         self.plot_widget_1.canvas.draw()
         self.plot_widget_2.canvas.draw()
         self.plot_widget_3.canvas.draw()
-
-    # def get_X_start(self):
-    #     return self.X_start.text()
-    #
-    # def get_X_end(self):
-    #     return self.X_end.text()
-
-    # def get_U0(self):
-    #     return self.U_X0.text()
-    #
-    # def get_DU0(self):
-    #     return self.DU_X0.text()
-
-    # def get_start_step(self):
-    #     return self.step_start.text()
-    #
-    # def get_step_control(self):
-    #     return self.step_control.text()
-    #
-    # def get_border_control(self):
-    #     return self.border_control.text()
-
-    # def get_task(self):
-    #     return self.task_selection_box.currentIndex(), self.task_selection_box.currentText()
-
-    # def get_step_mode(self):
-    #     return self.step_mode.isChecked()
 
     def set_row(self, table, row):
         max_row_index = table.rowCount()
@@ -292,12 +266,3 @@ class UI_mainWindow(QMainWindow):
 
     # def get_num_max_iter(self):
     #     return self.max_num_iter.text()
-
-    def get_num_uzlov(self):
-        return self.num_uzlov.text()
-
-    def get_task(self):
-        return self.comboBox.currentIndex()
-
-    def get_task_main_func(self):
-        return self.comboBox_functions.currentIndex()

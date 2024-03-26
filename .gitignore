@@ -16,4 +16,5 @@ dll/Release/*.exp
 dll/Release/*.lib
 dll/Release/*.pdb
 
-
+*.txt
+!requirements.txt

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>916</width>
+    <width>930</width>
     <height>990</height>
    </rect>
   </property>
@@ -30,23 +30,6 @@
      <string notr="true">border-color: rgb(113, 113, 113);</string>
     </property>
     <layout class="QGridLayout" name="information_layout" columnstretch="1,0,0">
-     <item row="1" column="1">
-      <widget class="Line" name="line">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="Line" name="line_2">
-       <property name="orientation">
-        <enum>Qt::Vertical</enum>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="2">
-      <layout class="QVBoxLayout" name="extra_info_layout"/>
-     </item>
      <item row="0" column="0">
       <widget class="QLabel" name="label_7">
        <property name="text">
@@ -61,6 +44,20 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="1">
+      <widget class="Line" name="line_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="Line" name="line">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="0">
       <layout class="QGridLayout" name="gridLayout">
        <property name="horizontalSpacing">
@@ -68,54 +65,57 @@
        </property>
        <item row="0" column="2">
         <layout class="QGridLayout" name="gridLayout_5">
-         <item row="2" column="0">
+         <item row="3" column="1">
+          <widget class="QComboBox" name="task_num">
+           <property name="currentText">
+            <string>f1</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>f1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>f12</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>f23</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <spacer name="verticalSpacer_3">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Число участков сплайна n = </string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
           <widget class="QLabel" name="label_8">
            <property name="text">
             <string>Функция основной задачи</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Число участков N = </string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="num_uzlov"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>Задача</string>
-           </property>
-          </widget>
-         </item>
          <item row="2" column="1">
-          <widget class="QComboBox" name="comboBox_functions">
-           <property name="currentText">
-            <string>f1(написать)</string>
-           </property>
-           <item>
-            <property name="text">
-             <string>f1(написать)</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>f2(написать)</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>f3(написать)</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="comboBox">
+          <widget class="QComboBox" name="task_type">
            <property name="currentText">
             <string>Тестовая</string>
            </property>
@@ -136,18 +136,25 @@
            </item>
           </widget>
          </item>
-         <item row="3" column="0">
-          <spacer name="verticalSpacer_3">
-           <property name="orientation">
-            <enum>Qt::Vertical</enum>
+         <item row="0" column="1">
+          <widget class="QLineEdit" name="input_n"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Задача</string>
            </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>20</width>
-             <height>40</height>
-            </size>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="input_N"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_12">
+           <property name="text">
+            <string>Контрольная сетка N = </string>
            </property>
-          </spacer>
+          </widget>
          </item>
         </layout>
        </item>
@@ -177,7 +184,7 @@
          <item row="0" column="1">
           <layout class="QGridLayout" name="gridLayout_3">
            <item row="0" column="1">
-            <widget class="QLineEdit" name="a_input"/>
+            <widget class="QLineEdit" name="input_a"/>
            </item>
            <item row="0" column="0">
             <widget class="QLabel" name="label_2">
@@ -194,7 +201,7 @@
             </widget>
            </item>
            <item row="0" column="3">
-            <widget class="QLineEdit" name="lineEdit_2"/>
+            <widget class="QLineEdit" name="input_b"/>
            </item>
            <item row="0" column="2">
             <widget class="QLabel" name="label_4">
@@ -219,10 +226,10 @@
           </spacer>
          </item>
          <item row="1" column="1">
-          <widget class="QLineEdit" name="mu_0_input"/>
+          <widget class="QLineEdit" name="input_mu_0"/>
          </item>
          <item row="2" column="1">
-          <widget class="QLineEdit" name="mu_1_input"/>
+          <widget class="QLineEdit" name="input_mu_1"/>
          </item>
         </layout>
        </item>
@@ -232,6 +239,26 @@
           <enum>Qt::Vertical</enum>
          </property>
         </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="2">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <item>
+        <layout class="QVBoxLayout" name="extra_info_layout"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </item>
@@ -493,7 +520,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>916</width>
+     <width>930</width>
      <height>26</height>
     </rect>
    </property>
@@ -512,18 +539,19 @@
   </action>
  </widget>
  <tabstops>
-  <tabstop>a_input</tabstop>
-  <tabstop>lineEdit_2</tabstop>
-  <tabstop>mu_0_input</tabstop>
-  <tabstop>mu_1_input</tabstop>
-  <tabstop>num_uzlov</tabstop>
-  <tabstop>comboBox</tabstop>
-  <tabstop>comboBox_functions</tabstop>
+  <tabstop>input_a</tabstop>
+  <tabstop>input_b</tabstop>
+  <tabstop>input_mu_0</tabstop>
+  <tabstop>input_mu_1</tabstop>
+  <tabstop>input_n</tabstop>
+  <tabstop>input_N</tabstop>
+  <tabstop>task_type</tabstop>
+  <tabstop>task_num</tabstop>
   <tabstop>plot_button</tabstop>
   <tabstop>delete_plot</tabstop>
-  <tabstop>tabWidget</tabstop>
   <tabstop>info_table_2</tabstop>
   <tabstop>info_table</tabstop>
+  <tabstop>tabWidget</tabstop>
  </tabstops>
  <resources/>
  <connections/>
