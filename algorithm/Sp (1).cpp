@@ -45,7 +45,7 @@ double one_more_test_d2func(double x) {
 //Если я взял не те варианты, поменяйте :-)
 //test func
 
-//finc 1
+//func 1
 double f1(double x) {
 	return std::sqrt(x * x - 1) / x;
 }
@@ -83,33 +83,33 @@ double d2f23(double x) {
 
 //F1
 double F1_oscillating(double x) {
-	return 1;
+	return f1(x)+std::cos(10*x);
 }
 double dF1_oscillating(double x) {
-	return 1;
+	return df1(x)-10*std::sin(10*x);
 }
 double d2F1_oscillating(double x) {
-	return 1;
+	return d2f1(x)-100*std::cos(10*x);
 }
-//F2
-double F2_oscillating(double x) {
-	return 1;
+//F12
+double F12_oscillating(double x) {
+	return f12(x) + std::cos(10 * x);
 }
-double dF2_oscillating(double x) {
-	return 1;
+double dF12_oscillating(double x) {
+	return df12(x) - 10 * std::sin(10 * x);
 }
-double d2F2_oscillating(double x) {
-	return 1;
+double d2F12_oscillating(double x) {
+	return d2f12(x) - 100 * std::cos(10 * x);
 }
-//F3
-double F3_oscillating(double x) {
-	return 1;
+//F23
+double F23_oscillating(double x) {
+	return f23(x) + std::cos(10 * x);
 }
-double dF3_oscillating(double x) {
-	return 1;
+double dF23_oscillating(double x) {
+	return df23(x) - 10 * std::sin(10 * x);
 }
-double d2F3_oscillating(double x) {
-	return 1;
+double d2F23_oscillating(double x) {
+	return d2f23(x) - 100 * std::cos(10 * x);
 }
 
 
@@ -119,9 +119,9 @@ std::vector<std::function<double(double)>> funcs = { one_more_test_func,f1, f12,
 std::vector<std::function<double(double)>> d_funcs = { one_more_test_dfunc,df1, df12,df23, dF1_oscillating ,dF2_oscillating ,dF3_oscillating };
 std::vector<std::function<double(double)>> d2_funcs = { one_more_test_d2func,d2f1, d2f12,d2f23,d2F1_oscillating, d2F2_oscillating, d2F3_oscillating };
 */
-std::vector<std::function<double(double)>> funcs = { f_test,f1, f12,f23, F1_oscillating,F2_oscillating,F3_oscillating };
-std::vector<std::function<double(double)>> d_funcs = { df_test,df1, df12,df23, dF1_oscillating ,dF2_oscillating ,dF3_oscillating };
-std::vector<std::function<double(double)>> d2_funcs = { d2f_test,d2f1, d2f12,d2f23,d2F1_oscillating, d2F2_oscillating, d2F3_oscillating };
+std::vector<std::function<double(double)>> funcs = { f_test,f1, f12,f23, F1_oscillating,F12_oscillating,F23_oscillating };
+std::vector<std::function<double(double)>> d_funcs = { df_test,df1, df12,df23, dF1_oscillating ,dF12_oscillating ,dF23_oscillating };
+std::vector<std::function<double(double)>> d2_funcs = { d2f_test,d2f1, d2f12,d2f23,d2F1_oscillating, d2F12_oscillating, d2F23_oscillating };
 
 
 
