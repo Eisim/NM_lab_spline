@@ -148,7 +148,7 @@ class UI_mainWindow(QMainWindow):
         file_name_2 = "table_2"
 
         file_name_3 = "for_plots"
-
+        file_name_4 = "plots_dots"
         file_name_extra_info = 'spravka'
 
         my_func = lib.write_to_files
@@ -193,28 +193,27 @@ class UI_mainWindow(QMainWindow):
                                      table_extra_info)  # заполнение вспомогательной информации(правый нижний угол)
 
         table_3 = self.file_to_table(file_name_3)  # Парсинг файла в табличный вид (тип ячейки:str) # Здесь графики
+        table_4 = self.file_to_table(file_name_4)
+        X_arr_for_plot = [float(row[0]) for row in table_4]
+        S_arr_for_plot = [float(row[1]) for row in table_4]
+        F_arr_for_plot = [float(row[2]) for row in table_4]
+        dS_arr_for_plot = [float(row[3]) for row in table_4]
+        dF_arr_for_plot = [float(row[4]) for row in table_4]
+
 
         X_arr = [float(row[0]) for row in table_3]
-        F_arr = [float(row[1]) for row in table_3]
-        S_arr = [float(row[2]) for row in table_3]
         Diff_arr = [float(row[3]) for row in table_3]
-
-        F_dot_arr = [float(row[4]) for row in table_3]
-        S_dot_arr = [float(row[5]) for row in table_3]
         Diff_dot_arr = [float(row[6]) for row in table_3]
-
-        F_ddot_arr = [float(row[7]) for row in table_3]
-        S_ddot_arr = [float(row[8]) for row in table_3]
         Diff_ddot_arr = [float(row[9]) for row in table_3]
 
-        self.plt.plot(X_arr, F_arr, label="Функция")
-        self.plt.plot(X_arr, S_arr, label="Сплайн")
+        self.plt.plot(X_arr_for_plot, F_arr_for_plot, label="Функция")
+        self.plt.plot(X_arr_for_plot, S_arr_for_plot, label="Сплайн")
         self.plt.set_xlim(auto=True)
         self.plt.set_ylim(auto=True)
         self.plt.legend(loc="upper left")
 
-        self.plt_PS.plot(X_arr, F_dot_arr, label="Производная функции")
-        self.plt_PS.plot(X_arr, S_dot_arr, label="Производная сплайна")
+        self.plt_PS.plot(X_arr_for_plot, dF_arr_for_plot, label="Производная функции")
+        self.plt_PS.plot(X_arr_for_plot, dS_arr_for_plot, label="Производная сплайна")
         self.plt_PS.set_xlim(auto=True)
         self.plt_PS.set_ylim(auto=True)
         self.plt_PS.legend(loc="upper left")

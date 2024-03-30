@@ -128,7 +128,6 @@ std::vector<std::function<double(double)>> d2_funcs = { d2f_test,d2f1, d2f12,d2f
 
 class Spline {
 private:
-	std::function<double(double)> func,d_func,d2_func;
 
 	void calc_C() {
 		C[0] = M1;
@@ -254,6 +253,8 @@ private:
 		}
 	}
 public:
+	std::function<double(double)> func, d_func, d2_func;
+
 	//ПРОВЕРКА КОРРЕКТНОСТИ
 	double max_dif_F_S, max_dif_dF_dS;
 	double argmax_dif_F_S, argmax_dif_dF_dS;
@@ -294,16 +295,42 @@ public:
 		calc_B();
 	}
 	//МЕТОДЫ КЛАССА
+	std::vector<double> calc_dS(std::vector<double> x) {
+		int spline_index = 1;
+		double cur_ds;
+		std::vector<double> tmp_dS;
+		for (auto e : x) {
+			if (e > x_arr[spline_index]) {
+				spline_index++;
+			}
+			else if (e < x_arr[spline_index - 1]) {//по идее этого условия не должно быть
+				spline_index--;
+			}
+			cur_ds = B[spline_index - 1] + C[spline_index] * (e - x_arr[spline_index]) + D[spline_index - 1] / 2 * std::pow((e - x_arr[spline_index]), 2);
+			tmp_dS.push_back(cur_ds);
+		}
+		return tmp_dS;
+	}
 
 	// задание функции(делается для тестов) 
 	// ЗАМЕЧАНИЕ: Spline не будет сохранять функцию, если она передаётся в какой-либо другой метод класса или конструктор
-	std::pair<std::vector<double>, std::vector<double>> calculate(int n) {//n - число разбиений
+	std::pair<std::vector<double>, std::vector<double>> calculate(int n,bool inplace = true) {//n - число разбиений
+		std::vector<double> *tmp_X, *tmp_S;
+		if (inplace) {
+			tmp_X = &x_N;
+			tmp_S = &S;
+		}
+		else {
+			tmp_X = new std::vector<double>;
+			tmp_S = new std::vector<double>;
+		}
+
 		double h = (x_arr[x_arr.size() - 1] - x_arr[0]) / n;
 		double cur_x, cur_s;
 		int spline_index = 1;
-		for (int i = 0; i < n; i++) {
+		for (int i = 0; i <= n; i++) {
 			cur_x = x_arr[0] + h * i;
-			x_N.push_back(cur_x);
+			(*tmp_X).push_back(cur_x);
 			if (cur_x > x_arr[spline_index]) {
 				spline_index++;
 			}
@@ -311,9 +338,14 @@ public:
 				spline_index--;
 			}
 			cur_s = A[spline_index - 1] + B[spline_index - 1] * (cur_x - x_arr[spline_index]) + C[spline_index] / 2 * std::pow((cur_x - x_arr[spline_index]), 2) + D[spline_index - 1] / 6 * std::pow((cur_x - x_arr[spline_index]), 3);
-			S.push_back(cur_s);
+			(*tmp_S).push_back(cur_s);
 		}
-		return std::pair<std::vector<double>, std::vector<double>> {x_N, S};
+		std::pair<std::vector<double>, std::vector<double>> res = {*tmp_X, *tmp_S};
+		if (!inplace) {
+			delete tmp_X;
+			delete tmp_S;
+		}
+		return res;
 	}
 
 	//МЕТОДЫ ДЛЯ ПРОВЕРКИ КОРРЕКТНОСТИ
@@ -360,20 +392,30 @@ extern "C" __declspec(dllexport) void write_to_files(int n, int N, double m1, do
 	std::ofstream table_2("table_2.txt");
 	std::ofstream spravka("spravka.txt");
 	std::ofstream for_plots("for_plots.txt");
+	std::ofstream plots_dots("plots_dots.txt");
 	for (int i = 1; i <= sp.n; i++) {
 		table_1 << (i) << ' ' << (sp.x_arr[i - 1]) << ' ' << (sp.x_arr[i]) << ' ' << sp.A[i-1] << ' ' << sp.B[i-1] << ' ' << sp.C[i] << ' ' << sp.D[i-1] << '\n';
 	}
-	for (int j = 0; j < N; j++) {
+	for (int j = 0; j <= N; j++) {
 		table_2 << j << ' ' << sp.x_N[j] << ' ' << sp.F[j] << ' ' << sp.S[j] << ' ' << sp.dif_F_S[j] << ' ' << sp.dF[j] << ' ' << sp.dS[j]<<' ' << sp.dif_dF_dS[j] << '\n';
 	}
 	spravka << sp.n << ' ' << N << ' ' << sp.max_dif_F_S << ' ' << sp.argmax_dif_F_S << ' ' << sp.max_dif_dF_dS << ' ' << sp.argmax_dif_dF_dS << '\n';
-	for (int j = 0; j < N; j++) {
+
+	for (int j = 0; j <= N; j++) {
 		for_plots << sp.x_N[j]<<' ' << sp.F[j] << ' ' << sp.S[j] << ' ' << sp.dif_F_S[j] << ' ';
 		for_plots << sp.dF[j] << ' ' << sp.dS[j] << ' ' << sp.dif_dF_dS[j] << ' ';
 		for_plots << sp.d2F[j] << ' ' << sp.d2S[j] << ' ' << sp.dif_d2F_d2S[j] << '\n';
 	}
+	int x_arr_for_plots = 5000; // Какое-то количество точек по которым будет строиться график
+	std::pair<std::vector<double>,std::vector<double>> plots_dots_arr = sp.calculate(x_arr_for_plots,false);
+	std::vector<double> tmp_dS = sp.calc_dS(plots_dots_arr.first);
+	for (int j = 0; j <= x_arr_for_plots;j++) {
+		plots_dots << plots_dots_arr.first[j] << ' ' << plots_dots_arr.second[j] << ' ' << sp.func(plots_dots_arr.first[j])<<' '<< tmp_dS[j]<<' '<<sp.d_func(plots_dots_arr.first[j])<< '\n';
+	}
+
 	table_1.close();
 	table_2.close();
 	spravka.close();
 	for_plots.close();
+	plots_dots.close();
 }
