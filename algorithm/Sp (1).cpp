@@ -53,7 +53,7 @@ double df1(double x) {
 	return 1 / (x * x * std::sqrt(x * x - 1));
 }
 double d2f1(double x) {
-	return ( std::sqrt(x*x-1)*(3*x*x-2) ) / (std::pow(x,7)-2*std::pow(x,5) + std::pow(x,3) );
+	return -( std::sqrt(x*x-1)*(3*x*x-2) ) / (std::pow(x,7)-2*std::pow(x,5) + std::pow(x,3) );
 }
 
 //func 12
