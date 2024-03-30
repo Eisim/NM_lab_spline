@@ -274,7 +274,7 @@
      </rect>
     </property>
     <property name="currentIndex">
-     <number>0</number>
+     <number>3</number>
     </property>
     <widget class="QWidget" name="tab">
      <attribute name="title">
@@ -344,15 +344,15 @@
        </rect>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="page_1">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>100</width>
-         <height>30</height>
+         <width>901</width>
+         <height>469</height>
         </rect>
        </property>
        <property name="accessibleName">
@@ -474,7 +474,7 @@
           <x>0</x>
           <y>0</y>
           <width>901</width>
-          <height>531</height>
+          <height>471</height>
          </rect>
         </property>
        </widget>
